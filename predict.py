@@ -17,7 +17,7 @@ class Predictor(BasePredictor):
     def setup(self) -> None:
         """Load the model into memory to make running multiple predictions efficient"""
         # self.model = torch.load("./weights.pth")
-        self.__device = "cpu"#torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.__device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.__model = SamModel.from_pretrained("./model/", local_files_only=True).to(self.__device)
         self.__processor = SamProcessor.from_pretrained("facebook/sam-vit-huge")
 
