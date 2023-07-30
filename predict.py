@@ -38,7 +38,7 @@ class Predictor(BasePredictor):
 
         # Compress the tensor file
         with zipfile.ZipFile(output_path, 'w', compression=zipfile.ZIP_DEFLATED) as zip_f:
-            zip_f.write(tensor_file)
+            zip_f.write(tensor_file, arcname="tensor.pth")
 
         return Path(output_path)
 
