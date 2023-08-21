@@ -6,10 +6,9 @@ from cog import BasePredictor, Input, File, Path
 import torch
 from transformers import SamModel, SamProcessor
 from PIL import Image
-import gzip
 import os
-import pickle
 import tempfile
+import numpy as np
 
 
 
@@ -24,6 +23,7 @@ class Predictor(BasePredictor):
     def predict(
         self,
         image: Path = Input(description="input image"),
+        as_npy: bool = Input(description="Save the the embeddings to a numpy array.", default=False)
     )-> Path: 
         raw_image = Image.open(image)
         inputs = self.__processor(raw_image, return_tensors="pt").to(self.__device)
@@ -31,14 +31,21 @@ class Predictor(BasePredictor):
 
         temp_dir =  Path(tempfile.mkdtemp())
 
-        tensor_file = temp_dir / "tensor.pth"
-        output_path = temp_dir / "tensor.zip"
 
-        torch.save(image_embeddings, tensor_file)
+        extension = "npy" if as_npy else "pth" 
+        filename = f"tensor.{extension}"
+
+        tensor_file = os.path.join(temp_dir, filename)
+        output_path = os.path.join(temp_dir, "tensor.zip")
+
+        if as_npy:
+            np.save(tensor_file, image_embeddings.detach().cpu().numpy())
+        else:
+            torch.save(image_embeddings, tensor_file)
 
         # Compress the tensor file
         with zipfile.ZipFile(output_path, 'w', compression=zipfile.ZIP_DEFLATED) as zip_f:
-            zip_f.write(tensor_file, arcname="tensor.pth")
+            zip_f.write(tensor_file, arcname=filename)
 
         return Path(output_path)
 
